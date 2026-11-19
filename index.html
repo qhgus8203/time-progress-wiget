@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clock & Progress Widget</title>
+  <title>Flip Clock & Progress Widget</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* 세 번째 이미지(#FFF8F8, #DBD5D7) 무드 팔레트 */
       --bg-soft: #FFF8F8;
       --border-greige: #DBD5D7;
-      /* #DBD5D7의 가장 어두운 딥 모브 계열 (검정 아님) */
       --clock-bg: #362729;
+      --clock-bg-top: #3B2B2D;
       --clock-text: #FFFFFF;
-      /* 시계 배경색에 투명도를 준 텍스트/숫자 색상 */
       --label-text: rgba(54, 39, 41, 0.72);
       --bar-fill: #615357;
       --bar-track: rgba(219, 213, 215, 0.55);
@@ -30,7 +28,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      background-color: transparent; /* 노션 배경과 자연스럽게 어우러지도록 투명 설정 */
+      background-color: transparent;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
       justify-content: center;
@@ -47,7 +45,7 @@
       gap: 18px;
     }
 
-    /* 상단 플립 스타일 시계 영역 */
+    /* 상단 플립 시계 영역 */
     .clock-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -55,46 +53,117 @@
       width: 100%;
     }
 
-    .clock-card {
+    .flip-unit {
       position: relative;
-      background-color: var(--clock-bg);
-      color: var(--clock-text);
+      width: 100%;
       aspect-ratio: 1 / 1.12;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 0px; /* 깔끔한 직각 모서리 */
+      background-color: var(--clock-bg);
+      perspective: 600px;
+      border-radius: 0px;
       overflow: hidden;
     }
 
-    /* 플립 시계 중앙 미세 라인 디테일 */
-    .clock-card::after {
-      content: "";
+    /* 기본 위/아래 반쪽 카드 */
+    .flip-half {
       position: absolute;
       left: 0;
-      right: 0;
-      top: 50%;
-      height: 1px;
-      background: rgba(255, 248, 248, 0.12);
-      pointer-events: none;
-    }
-
-    .clock-number {
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      color: var(--clock-text);
       font-size: clamp(2.4rem, 11vw, 3.2rem);
       font-weight: 800;
       letter-spacing: -0.03em;
-      line-height: 1;
-      color: #FFFFFF;
+      backface-visibility: hidden;
     }
 
+    .flip-half span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 200%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
+
+    /* 위쪽 절반 */
+    .flip-top, .flip-leaf-front {
+      top: 0;
+      background-color: var(--clock-bg-top);
+      border-bottom: 1px solid rgba(255, 248, 248, 0.14);
+    }
+
+    .flip-top span, .flip-leaf-front span {
+      top: 0;
+    }
+
+    /* 아래쪽 절반 */
+    .flip-bottom, .flip-leaf-back {
+      bottom: 0;
+      background-color: var(--clock-bg);
+    }
+
+    .flip-bottom span, .flip-leaf-back span {
+      bottom: 0;
+    }
+
+    /* 애니메이션용 플립 리프 */
+    .flip-leaf-front {
+      z-index: 2;
+      transform-origin: 50% 100%;
+    }
+
+    .flip-leaf-back {
+      z-index: 3;
+      transform-origin: 50% 0%;
+      transform: rotateX(90deg);
+    }
+
+    .flip-unit.flipping .flip-leaf-front {
+      animation: flipDownTop 0.28s ease-in forwards;
+    }
+
+    .flip-unit.flipping .flip-leaf-back {
+      animation: flipDownBottom 0.28s 0.28s ease-out forwards;
+    }
+
+    @keyframes flipDownTop {
+      0% {
+        transform: rotateX(0deg);
+        filter: brightness(1);
+      }
+      100% {
+        transform: rotateX(-90deg);
+        filter: brightness(0.75);
+      }
+    }
+
+    @keyframes flipDownBottom {
+      0% {
+        transform: rotateX(90deg);
+        filter: brightness(0.8);
+      }
+      100% {
+        transform: rotateX(0deg);
+        filter: brightness(1);
+      }
+    }
+
+    /* AM/PM 및 요일 표기 (카드 최상위 레이어) */
     .clock-sub {
       position: absolute;
       bottom: 8px;
+      z-index: 5;
       font-size: 0.62rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
     }
 
     .clock-sub.left {
@@ -155,19 +224,28 @@
 </head>
 <body>
   <div class="widget-container">
-    <!-- 상단 시계 위젯 -->
+    <!-- 상단 플립 시계 위젯 -->
     <div class="clock-grid">
-      <div class="clock-card">
-        <span class="clock-number" id="hours">00</span>
+      <!-- 시(Hour) 플립 카드 -->
+      <div class="flip-unit" id="hour-unit">
+        <div class="flip-half flip-top"><span>00</span></div>
+        <div class="flip-half flip-bottom"><span>00</span></div>
+        <div class="flip-half flip-leaf-front"><span>00</span></div>
+        <div class="flip-half flip-leaf-back"><span>00</span></div>
         <span class="clock-sub left" id="ampm">AM</span>
       </div>
-      <div class="clock-card">
-        <span class="clock-number" id="minutes">00</span>
+
+      <!-- 분(Minute) 플립 카드 -->
+      <div class="flip-unit" id="minute-unit">
+        <div class="flip-half flip-top"><span>00</span></div>
+        <div class="flip-half flip-bottom"><span>00</span></div>
+        <div class="flip-half flip-leaf-front"><span>00</span></div>
+        <div class="flip-half flip-leaf-back"><span>00</span></div>
         <span class="clock-sub right" id="weekday">THU</span>
       </div>
     </div>
 
-    <!-- 하단 진행률 바 위젯 (year, month, week) -->
+    <!-- 하단 진행률 바 위젯 -->
     <div class="progress-list">
       <div class="progress-row">
         <span class="progress-label">year</span>
@@ -196,41 +274,90 @@
   </div>
 
   <script>
+    let currentHourStr = null;
+    let currentMinuteStr = null;
+
+    function setUnitInstant(unitEl, val) {
+      unitEl.querySelectorAll('span:not(.clock-sub)').forEach(el => {
+        el.textContent = val;
+      });
+    }
+
+    function flipTo(unitEl, oldVal, newVal) {
+      if (oldVal === null || oldVal === newVal) {
+        setUnitInstant(unitEl, newVal);
+        return;
+      }
+
+      const topStatic = unitEl.querySelector('.flip-top span');
+      const bottomStatic = unitEl.querySelector('.flip-bottom span');
+      const leafFront = unitEl.querySelector('.flip-leaf-front span');
+      const leafBack = unitEl.querySelector('.flip-leaf-back span');
+
+      // 플립 시작 상태 세팅
+      topStatic.textContent = newVal;
+      bottomStatic.textContent = oldVal;
+      leafFront.textContent = oldVal;
+      leafBack.textContent = newVal;
+
+      unitEl.classList.remove('flipping');
+      void unitEl.offsetWidth; // 리플로우 트리거
+      unitEl.classList.add('flipping');
+
+      // 애니메이션 완료 후 정적 카드 정리 (총 560ms)
+      setTimeout(() => {
+        bottomStatic.textContent = newVal;
+        leafFront.textContent = newVal;
+        unitEl.classList.remove('flipping');
+      }, 570);
+    }
+
     function updateWidget() {
       const now = new Date();
 
-      // 1. 시계 업데이트 (12시간제 기준 AM/PM + 요일)
       let hours = now.getHours();
       const minutes = now.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
-       // 0시는 12로 표시
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      const hourStr = String(hours).padStart(2, '0');
+      const minuteStr = String(minutes).padStart(2, '0');
+
+      const hourUnit = document.getElementById('hour-unit');
+      const minuteUnit = document.getElementById('minute-unit');
+
+      if (currentHourStr !== hourStr) {
+        flipTo(hourUnit, currentHourStr, hourStr);
+        currentHourStr = hourStr;
+      }
+
+      if (currentMinuteStr !== minuteStr) {
+        flipTo(minuteUnit, currentMinuteStr, minuteStr);
+        currentMinuteStr = minuteStr;
+      }
 
       const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-      const weekday = days[now.getDay()];
-
-      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
-      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
       document.getElementById('ampm').textContent = ampm;
-      document.getElementById('weekday').textContent = weekday;
+      document.getElementById('weekday').textContent = days[now.getDay()];
 
-      // 2. 연간(Year) 진행률 계산
+      // 연간(Year) 진행률
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
       const yearProgress = Math.min(100, Math.max(0, Math.round(((now - startOfYear) / (endOfYear - startOfYear)) * 100)));
 
-      // 3. 월간(Month) 진행률 계산
+      // 월간(Month) 진행률
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       const monthProgress = Math.min(100, Math.max(0, Math.round(((now - startOfMonth) / (endOfMonth - startOfMonth)) * 100)));
 
-      // 4. 주간(Week) 진행률 계산 (월요일 시작 기준)
-      const dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
+      // 주간(Week) 진행률 (월요일 시작 기준)
+      const dayOfWeek = now.getDay();
       const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
       const endOfWeek = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + 7);
       const weekProgress = Math.min(100, Math.max(0, Math.round(((now - startOfWeek) / (endOfWeek - startOfWeek)) * 100)));
 
-      // DOM 반영
       document.getElementById('year-pct').textContent = `${yearProgress}%`;
       document.getElementById('year-bar').style.width = `${yearProgress}%`;
 
