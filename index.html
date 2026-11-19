@@ -73,9 +73,10 @@
       display: flex;
       justify-content: center;
       color: var(--clock-text);
-      font-size: 3.45rem;
+      font-size: 2.95rem;
       font-weight: 800;
-      letter-spacing: -0.06em;
+      letter-spacing: 0.02em; /* 숫자 사이 간격 여유 확보 */
+      font-variant-numeric: tabular-nums; /* 모든 숫자 동일 폭 고정 */
       backface-visibility: hidden;
     }
 
@@ -88,7 +89,8 @@
       justify-content: center;
       align-items: center;
       line-height: 1;
-      transform: scaleY(1.25); /* 세로로 길쭉하게 꽉 차도록 비율 조정 */
+      transform: scaleY(1.2);
+      padding-left: 0.02em; /* letter-spacing 우측 치우침 보정 */
     }
 
     .flip-top, .flip-leaf-front {
