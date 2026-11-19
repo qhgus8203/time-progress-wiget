@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flip Clock & Progress Widget</title>
+  <title>Slim 24h Flip Clock & Progress Widget</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -36,34 +36,34 @@
       user-select: none;
     }
 
+    /* 전체적으로 작고 슬림한 컨테이너 */
     .widget-container {
       width: 100%;
-      max-width: 280px;
-      padding: 14px;
+      max-width: 190px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
-    /* 상단 플립 시계 영역 */
+    /* 상단 플립 시계 영역 (가로 좁고 세로 길게) */
     .clock-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
       width: 100%;
     }
 
     .flip-unit {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1.12;
+      aspect-ratio: 1 / 1.48; /* 세로로 길쭉한 비율 */
       background-color: var(--clock-bg);
-      perspective: 600px;
+      perspective: 500px;
       border-radius: 0px;
       overflow: hidden;
     }
 
-    /* 기본 위/아래 반쪽 카드 */
     .flip-half {
       position: absolute;
       left: 0;
@@ -73,9 +73,9 @@
       display: flex;
       justify-content: center;
       color: var(--clock-text);
-      font-size: clamp(2.4rem, 11vw, 3.2rem);
+      font-size: 2.15rem;
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.04em;
       backface-visibility: hidden;
     }
 
@@ -90,7 +90,6 @@
       line-height: 1;
     }
 
-    /* 위쪽 절반 */
     .flip-top, .flip-leaf-front {
       top: 0;
       background-color: var(--clock-bg-top);
@@ -101,7 +100,6 @@
       top: 0;
     }
 
-    /* 아래쪽 절반 */
     .flip-bottom, .flip-leaf-back {
       bottom: 0;
       background-color: var(--clock-bg);
@@ -111,7 +109,6 @@
       bottom: 0;
     }
 
-    /* 애니메이션용 플립 리프 */
     .flip-leaf-front {
       z-index: 2;
       transform-origin: 50% 100%;
@@ -153,12 +150,13 @@
       }
     }
 
-    /* AM/PM 및 요일 표기 (카드 최상위 레이어) */
+    /* 우측 하단 요일 표기 */
     .clock-sub {
       position: absolute;
-      bottom: 8px;
+      bottom: 7px;
+      right: 8px;
       z-index: 5;
-      font-size: 0.62rem;
+      font-size: 0.55rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -166,31 +164,23 @@
       pointer-events: none;
     }
 
-    .clock-sub.left {
-      left: 10px;
-    }
-
-    .clock-sub.right {
-      right: 10px;
-    }
-
     /* 하단 프로그레스 바 영역 */
     .progress-list {
       display: flex;
       flex-direction: column;
-      gap: 11px;
+      gap: 8px;
       width: 100%;
     }
 
     .progress-row {
       display: grid;
-      grid-template-columns: 46px 36px 1fr;
+      grid-template-columns: 38px 28px 1fr;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .progress-label {
-      font-size: 0.78rem;
+      font-size: 0.68rem;
       font-weight: 600;
       color: var(--label-text);
       text-transform: lowercase;
@@ -198,7 +188,7 @@
     }
 
     .progress-percent {
-      font-size: 0.76rem;
+      font-size: 0.66rem;
       font-weight: 600;
       color: var(--label-text);
       text-align: right;
@@ -207,7 +197,7 @@
 
     .progress-track {
       width: 100%;
-      height: 7px;
+      height: 5px;
       background-color: var(--bar-track);
       border-radius: 999px;
       overflow: hidden;
@@ -224,7 +214,7 @@
 </head>
 <body>
   <div class="widget-container">
-    <!-- 상단 플립 시계 위젯 -->
+    <!-- 상단 24시간제 플립 시계 위젯 -->
     <div class="clock-grid">
       <!-- 시(Hour) 플립 카드 -->
       <div class="flip-unit" id="hour-unit">
@@ -232,7 +222,6 @@
         <div class="flip-half flip-bottom"><span>00</span></div>
         <div class="flip-half flip-leaf-front"><span>00</span></div>
         <div class="flip-half flip-leaf-back"><span>00</span></div>
-        <span class="clock-sub left" id="ampm">AM</span>
       </div>
 
       <!-- 분(Minute) 플립 카드 -->
@@ -241,7 +230,7 @@
         <div class="flip-half flip-bottom"><span>00</span></div>
         <div class="flip-half flip-leaf-front"><span>00</span></div>
         <div class="flip-half flip-leaf-back"><span>00</span></div>
-        <span class="clock-sub right" id="weekday">THU</span>
+        <span class="clock-sub" id="weekday">THU</span>
       </div>
     </div>
 
@@ -294,17 +283,15 @@
       const leafFront = unitEl.querySelector('.flip-leaf-front span');
       const leafBack = unitEl.querySelector('.flip-leaf-back span');
 
-      // 플립 시작 상태 세팅
       topStatic.textContent = newVal;
       bottomStatic.textContent = oldVal;
       leafFront.textContent = oldVal;
       leafBack.textContent = newVal;
 
       unitEl.classList.remove('flipping');
-      void unitEl.offsetWidth; // 리플로우 트리거
+      void unitEl.offsetWidth;
       unitEl.classList.add('flipping');
 
-      // 애니메이션 완료 후 정적 카드 정리 (총 560ms)
       setTimeout(() => {
         bottomStatic.textContent = newVal;
         leafFront.textContent = newVal;
@@ -315,11 +302,9 @@
     function updateWidget() {
       const now = new Date();
 
-      let hours = now.getHours();
+      // 24시간제 적용
+      const hours = now.getHours();
       const minutes = now.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
 
       const hourStr = String(hours).padStart(2, '0');
       const minuteStr = String(minutes).padStart(2, '0');
@@ -338,7 +323,6 @@
       }
 
       const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-      document.getElementById('ampm').textContent = ampm;
       document.getElementById('weekday').textContent = days[now.getDay()];
 
       // 연간(Year) 진행률
