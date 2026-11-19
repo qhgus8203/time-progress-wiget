@@ -46,7 +46,7 @@
       gap: 14px;
     }
 
-    /* 상단 플립 시계 영역 (가로 좁고 세로 길게) */
+    /* 상단 플립 시계 영역 */
     .clock-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -57,7 +57,7 @@
     .flip-unit {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1.48; /* 세로로 길쭉한 비율 */
+      aspect-ratio: 1 / 1.48;
       background-color: var(--clock-bg);
       perspective: 500px;
       border-radius: 0px;
@@ -73,9 +73,9 @@
       display: flex;
       justify-content: center;
       color: var(--clock-text);
-      font-size: 2.15rem;
+      font-size: 3.45rem;
       font-weight: 800;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.06em;
       backface-visibility: hidden;
     }
 
@@ -88,6 +88,7 @@
       justify-content: center;
       align-items: center;
       line-height: 1;
+      transform: scaleY(1.25); /* 세로로 길쭉하게 꽉 차도록 비율 조정 */
     }
 
     .flip-top, .flip-leaf-front {
@@ -153,10 +154,10 @@
     /* 우측 하단 요일 표기 */
     .clock-sub {
       position: absolute;
-      bottom: 7px;
-      right: 8px;
+      bottom: 6px;
+      right: 7px;
       z-index: 5;
-      font-size: 0.55rem;
+      font-size: 0.52rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -302,7 +303,6 @@
     function updateWidget() {
       const now = new Date();
 
-      // 24시간제 적용
       const hours = now.getHours();
       const minutes = now.getMinutes();
 
