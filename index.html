@@ -6,13 +6,14 @@
   <title>Clock & Progress Widget</title>
   <style>
     :root {
-      --bg: #fff8f8;              /* 위젯 전체 배경 (사진 1의 첫 번째 색) */
-      --clock-bg: #4a4246;        /* 시계 배경 (#DBD5D7을 어둡게 한 색, 검정 아님) */
+      --bg: #fff8f8;              /* 위젯 전체 배경 */
+      --border: #e4dcdf;          /* 위젯 테두리 */
+      --clock-bg: #4a4246;        /* 시·분 타일 배경 (#DBD5D7을 어둡게 한 색) */
       --clock-text: #ffffff;      /* 시계 숫자 */
-      --ink: rgba(74, 66, 70, 0.7);      /* 라벨·퍼센트: 시계 배경색의 투명 버전 */
+      --ink: rgba(74, 66, 70, 0.7);      /* 라벨·퍼센트 (시계 배경색의 투명 버전) */
       --track: rgba(74, 66, 70, 0.12);   /* 막대 바탕 */
-      --fill: rgba(74, 66, 70, 0.6);     /* 막대 진행 부분 */
-      --border: #dbd5d7;          /* 테두리 */
+      --fill: rgba(74, 66, 70, 0.55);    /* 막대 진행 부분 */
+      --tile-gap: 6px;            /* 시와 분 타일 사이 간격 */
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,74 +26,75 @@
                    "Malgun Gothic", "Segoe UI", sans-serif;
     }
 
+    body {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
     .widget {
       width: 100%;
-      max-width: 300px;
-      margin: 0 auto;
+      max-width: 200px;           /* 가로로 퍼지지 않도록 폭을 좁힘 */
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       user-select: none;
     }
 
-    /* 시계 */
+    /* 시계: 시와 분을 나눈 두 타일 */
     .clock {
-      background: var(--clock-bg);
-      border-radius: 10px;
-      padding: 14px 0;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
+      gap: var(--tile-gap);
     }
 
-    .clock-unit {
+    .tile {
+      flex: 1;
+      background: var(--clock-bg);
+      border-radius: 8px;
+      height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clock-num {
       color: var(--clock-text);
-      font-size: 44px;
+      font-size: 42px;
       font-weight: 700;
+      line-height: 1;
       letter-spacing: 1px;
       font-variant-numeric: tabular-nums;
-      line-height: 1;
-    }
-
-    .colon {
-      color: var(--clock-text);
-      font-size: 36px;
-      font-weight: 700;
-      line-height: 1;
-      opacity: 0.85;
     }
 
     /* 진행률 */
     .progress-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       padding: 0 2px 2px;
     }
 
     .progress-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
 
     .progress-label {
-      width: 48px;
-      font-size: 12px;
+      width: 38px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--ink);
-      text-transform: lowercase;
       flex-shrink: 0;
     }
 
     .progress-percent {
-      width: 40px;
-      font-size: 12px;
+      width: 30px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--ink);
       text-align: right;
@@ -102,7 +104,7 @@
 
     .progress-track {
       flex: 1;
-      height: 8px;
+      height: 7px;
       background: var(--track);
       border-radius: 999px;
       overflow: hidden;
@@ -120,9 +122,8 @@
 <body>
   <div class="widget">
     <div class="clock">
-      <div class="clock-unit" id="hh">00</div>
-      <div class="colon">:</div>
-      <div class="clock-unit" id="mm">00</div>
+      <div class="tile"><div class="clock-num" id="hh">00</div></div>
+      <div class="tile"><div class="clock-num" id="mm">00</div></div>
     </div>
 
     <div class="progress-list">
@@ -158,37 +159,37 @@
 
       const pad = (n) => String(n).padStart(2, "0");
 
+      function setProgress(pctEl, barEl, ratio) {
+        const clamped = Math.min(Math.max(ratio, 0), 1);
+        pctEl.textContent = Math.floor(clamped * 100) + "%";
+        barEl.style.width = (clamped * 100).toFixed(2) + "%";
+      }
+
       function update() {
         const now = new Date();
 
-        // 시계 (24시간제)
+        // 시계 (24시간제): 시와 분을 각각 다른 타일에 표시
         hhEl.textContent = pad(now.getHours());
         mmEl.textContent = pad(now.getMinutes());
 
-        // 연간 진행률: 올해 경과 시간 / 올해 전체 시간
+        // 연간 진행률
         const yearStart = new Date(now.getFullYear(), 0, 1);
         const nextYear  = new Date(now.getFullYear() + 1, 0, 1);
         const yearP = (now - yearStart) / (nextYear - yearStart);
 
-        // 월간 진행률: 이번 달 경과 시간 / 이번 달 전체 시간
+        // 월간 진행률
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const nextMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         const monthP = (now - monthStart) / (nextMonth - monthStart);
 
-        // 주간 진행률: 월요일 시작 기준 이번 주 경과 시간 / 7일
-        const dayIndex = (now.getDay() + 6) % 7; // 월=0 ... 일=6
+        // 주간 진행률 (월요일 시작)
+        const dayIndex = (now.getDay() + 6) % 7;
         const msIntoDay = now - new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const weekP = (dayIndex + msIntoDay / 86400000) / 7;
 
         setProgress(yearPct, yearBar, yearP);
         setProgress(monthPct, monthBar, monthP);
         setProgress(weekPct, weekBar, weekP);
-      }
-
-      function setProgress(pctEl, barEl, ratio) {
-        const pct = Math.floor(ratio * 100);
-        pctEl.textContent = pct + "%";
-        barEl.style.width = (ratio * 100).toFixed(2) + "%";
       }
 
       update();
